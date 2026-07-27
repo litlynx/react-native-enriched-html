@@ -28,8 +28,7 @@ The interactive examples throughout these docs are the web build running live.
 ## Keyboard shortcuts
 
 The web editor ships desktop-style formatting shortcuts out of the box, along
-with native browser **undo/redo**. `Mod` is `⌘` on macOS and `Ctrl` on
-Windows/Linux.
+with native browser **undo/redo**.
 
 | Action              | macOS          | Windows / Linux             |
 | ------------------- | -------------- | --------------------------- |
@@ -79,12 +78,11 @@ Unlike the native platforms, the web build sanitizes HTML for you. It runs
 `children` of `EnrichedText`, and `defaultValue`, `setValue`, and pasted content
 on `EnrichedTextInput`. Sanitization is also run on the input component's **output** - `getHTML()`.
 This ensures untrusted markup can't inject scripts or unsafe attributes into the DOM.
-:::caution
 
-Sanitization is tied to link detection: the [`linkRegex`](/rich-text-formatting/links)
-you provide determines which `href` values are allowed to survive on `<a>`
-elements. Anchors whose URLs don't match the pattern have their `href` stripped
-during sanitization.
+:::tip
+
+Sanitization can be customized with the `sanitizationConfig` prop. It allows to set a `linkRegex` that
+will define, which `href` attributes will actually be preserved by the sanitizer.
 
 :::
 
