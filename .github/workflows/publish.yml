@@ -85,6 +85,14 @@ jobs:
             '//npm.pkg.github.com/:_authToken='"$NODE_AUTH_TOKEN" \
             'always-auth=true' > "$HOME/.npmrc"
 
+      - name: Configure GitHub Packages authentication
+        shell: bash
+        run: |
+          printf '%s\n' \
+            '@litlynx:registry=https://npm.pkg.github.com' \
+            '//npm.pkg.github.com/:_authToken='"$NODE_AUTH_TOKEN" \
+            'always-auth=true' > "$HOME/.npmrc"
+
       - name: Install dependencies
         run: yarn install --immutable
 
