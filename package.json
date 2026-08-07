@@ -1,5 +1,5 @@
 {
-  "name": "react-native-enriched-html",
+  "name": "react-native-enriched-html-barter",
   "version": "1.0.0-barter",
   "description": "HTML-based Rich Text solution for React Native",
   "source": "./src/index.tsx",
