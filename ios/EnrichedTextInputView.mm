@@ -596,6 +596,14 @@ Class<RCTComponentViewProtocol> EnrichedTextInputViewCls(void) {
   if (newViewProps.scrollEnabled != oldViewProps.scrollEnabled ||
       textView.scrollEnabled != newViewProps.scrollEnabled) {
     [textView setScrollEnabled:newViewProps.scrollEnabled];
+    [textView setShowsCustomVerticalScrollIndicator:
+                  newViewProps.scrollEnabled];
+  }
+
+  if (newViewProps.showVerticalScrollbar !=
+      oldViewProps.showVerticalScrollbar) {
+    [textView setShowsCustomVerticalScrollIndicator:
+                  newViewProps.showVerticalScrollbar];
   }
 
   if (newViewProps.showVerticalScrollbar !=
