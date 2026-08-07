@@ -28,7 +28,7 @@ describe('resolveReleaseVersion', () => {
     });
   });
 
-  test('keeps latest unchanged for a maintenance release', () => {
+  test('publishes every stable release with the latest tag', () => {
     expect(
       resolve({
         distTags: { latest: '2.0.0' },
@@ -36,8 +36,8 @@ describe('resolveReleaseVersion', () => {
         publishedVersions: ['1.0.0', '2.0.0'],
       })
     ).toEqual({
-      removeTagAfterPublish: true,
-      tag: 'legacy',
+      removeTagAfterPublish: false,
+      tag: 'latest',
       version: '1.0.1',
     });
   });

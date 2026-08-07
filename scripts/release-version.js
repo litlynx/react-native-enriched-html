@@ -20,16 +20,6 @@ function parseStableVersion(value, label = 'version') {
   };
 }
 
-function compareStableVersions(left, right) {
-  for (const key of ['major', 'minor', 'patch']) {
-    if (left[key] !== right[key]) {
-      return left[key] - right[key];
-    }
-  }
-
-  return 0;
-}
-
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -66,17 +56,9 @@ function resolveReleaseVersion({
       throw new Error(`${version.value} is already published`);
     }
 
-    const latest = distTags.latest
-      ? parseStableVersion(distTags.latest, 'latest dist-tag')
-      : null;
-    const tag =
-      !latest || compareStableVersions(version, latest) > 0
-        ? 'latest'
-        : 'legacy';
-
     return {
-      removeTagAfterPublish: tag === 'legacy',
-      tag,
+      removeTagAfterPublish: false,
+      tag: 'latest',
       version: version.value,
     };
   }
@@ -247,7 +229,6 @@ if (require.main === module) {
 }
 
 module.exports = {
-  compareStableVersions,
   formatUtcDate,
   parseStableVersion,
   resolveReleaseVersion,
