@@ -12553,9 +12553,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"react-native-enriched-html@workspace:.":
+"react-native-enriched-html-barter@workspace:.":
   version: 0.0.0-use.local
-  resolution: "react-native-enriched-html@workspace:."
+  resolution: "react-native-enriched-html-barter@workspace:."
   dependencies:
     "@commitlint/config-conventional": "npm:^19.6.0"
     "@eslint/compat": "npm:^1.2.7"
