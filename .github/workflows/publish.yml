@@ -153,7 +153,7 @@ jobs:
         shell: bash
         run: |
           npm pack --ignore-scripts --json > npm-pack.json
-          TARBALL=$(node -e "const fs=require('node:fs'); const data=JSON.parse(fs.readFileSync('npm-pack.json','utf8')); process.stdout.write(data[0].filename)")
+          TARBALL=$(jq -r '.[0].filename' npm-pack.json)
           echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
 
       - name: Upload package artifact
