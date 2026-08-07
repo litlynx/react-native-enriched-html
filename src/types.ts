@@ -644,6 +644,7 @@ export interface EnrichedTextInputProps extends Omit<ViewProps, 'children'> {
    */
   scrollEnabled?: boolean;
 
+  /** Shows a custom vertical scrollbar while the editor content can scroll. */
   showVerticalScrollbar?: boolean;
 
   /**

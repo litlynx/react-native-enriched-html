@@ -62,13 +62,13 @@
     return;
   }
 
-  CGFloat indicatorHeight = MAX(18, viewportHeight * viewportHeight / contentHeight);
+  CGFloat indicatorHeight =
+      MAX(18, viewportHeight * viewportHeight / contentHeight);
   CGFloat progress = MIN(MAX(self.contentOffset.y / scrollableHeight, 0), 1);
   EnrichedTextInputView *input = (EnrichedTextInputView *)_input;
   _customVerticalScrollIndicator.frame = CGRectMake(
       CGRectGetWidth(input.bounds) - 10,
-      CGRectGetMinY(self.frame) +
-          progress * (viewportHeight - indicatorHeight),
+      CGRectGetMinY(self.frame) + progress * (viewportHeight - indicatorHeight),
       6, indicatorHeight);
 }
 
