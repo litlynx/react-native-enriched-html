@@ -4,7 +4,7 @@
 [![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-enriched-2?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-enriched-2&n=1)
 [![Ad](https://swm-delivery.com/www/images/zone-gh-react-native-enriched-3?n=1)](https://swm-delivery.com/www/delivery/ck-slug.php?zoneid=zone-gh-react-native-enriched-3&n=1)
 
-# react-native-enriched-html
+# react-native-enriched-html - Barter Version
 
 `react-native-enriched-html` is a powerful React Native Rich Text solution:
 
