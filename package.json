@@ -1,5 +1,5 @@
 {
-  "name": "react-native-enriched-html-barter",
+  "name": "@litlynx/react-native-enriched-html",
   "version": "1.0.0-barter",
   "description": "HTML-based Rich Text solution for React Native",
   "source": "./src/index.tsx",
@@ -76,16 +76,16 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/software-mansion/react-native-enriched-html.git"
+    "url": "git+https://github.com/litlynx/react-native-enriched-html.git"
   },
   "author": "Software Mansion <contact@swmansion.com> (https://swmansion.com)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/software-mansion/react-native-enriched-html/issues"
+    "url": "https://github.com/litlynx/react-native-enriched-html/issues"
   },
-  "homepage": "https://github.com/software-mansion/react-native-enriched-html#readme",
+  "homepage": "https://github.com/litlynx/react-native-enriched-html#readme",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://npm.pkg.github.com/"
   },
   "dependencies": {
     "@tiptap/core": "3.20.4",

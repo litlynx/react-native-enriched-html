@@ -17,8 +17,6 @@ jobs:
           cache: yarn
           registry-url: https://npm.pkg.github.com
       - run: yarn install --immutable
-      - run: |
-          npm pkg set name=@litlynx/react-native-enriched-html repository.url=git+https://github.com/litlynx/react-native-enriched-html.git
-          npm publish --registry=https://npm.pkg.github.com
+      - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
