@@ -1,6 +1,6 @@
 {
   "name": "@litlynx/react-native-enriched-html",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "HTML-based Rich Text solution for React Native",
   "source": "./src/index.tsx",
   "main": "./lib/module/index.js",
