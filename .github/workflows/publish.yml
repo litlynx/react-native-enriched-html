@@ -78,20 +78,13 @@ jobs:
           scope: '@litlynx'
 
       - name: Configure GitHub Packages authentication
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          printf '%s\n' \
-            '@litlynx:registry=https://npm.pkg.github.com' \
-            '//npm.pkg.github.com/:_authToken='"$NODE_AUTH_TOKEN" \
-            'always-auth=true' > "$HOME/.npmrc"
-
-      - name: Configure GitHub Packages authentication
-        shell: bash
-        run: |
-          printf '%s\n' \
-            '@litlynx:registry=https://npm.pkg.github.com' \
-            '//npm.pkg.github.com/:_authToken='"$NODE_AUTH_TOKEN" \
-            'always-auth=true' > "$HOME/.npmrc"
+          npm config set "@litlynx:registry" "$REGISTRY_URL"
+          npm config set "//npm.pkg.github.com/:_authToken" "$NODE_AUTH_TOKEN"
+          npm config set "always-auth" true
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -229,6 +222,7 @@ jobs:
         env:
           DIST_TAG: ${{ steps.release.outputs.tag }}
           TARBALL: ${{ steps.pack.outputs.tarball }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm publish "$TARBALL" --tag "$DIST_TAG" --registry "$REGISTRY_URL"
 
       - name: Remove temporary maintenance tag

@@ -16,7 +16,17 @@ jobs:
           node-version-file: .nvmrc
           cache: yarn
           registry-url: https://npm.pkg.github.com
+          scope: '@litlynx'
+      - name: Configure GitHub Packages authentication
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm config set "@litlynx:registry" "https://npm.pkg.github.com"
+          npm config set "//npm.pkg.github.com/:_authToken" "$NODE_AUTH_TOKEN"
+          npm config set "always-auth" true
       - run: yarn install --immutable
-      - run: npm publish
+      - run: yarn prepare
+      - run: npm publish --registry https://npm.pkg.github.com
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
