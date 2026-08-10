@@ -97,8 +97,13 @@ class EnrichedTextInputView :
   var showVerticalScrollbar: Boolean = false
     set(value) {
       field = value
-      isVerticalScrollBarEnabled = !value
-      invalidate()
+      isVerticalScrollBarEnabled = false
+      if (!value) {
+        removeCallbacks(verticalScrollbarHideRunnable)
+        verticalScrollbarVisible = false
+        verticalScrollbarValidUpdates = 0
+      }
+      scheduleVerticalScrollbarUpdate()
     }
   var allowFontScaling: Boolean = EnrichedConstants.ALLOW_FONT_SCALING_DEFAULT
     set(value) {
@@ -158,6 +163,24 @@ class EnrichedTextInputView :
     Paint(Paint.ANTI_ALIAS_FLAG).apply {
       color = Color.rgb(207, 207, 207)
     }
+  private var verticalScrollbarTop = 0f
+  private var verticalScrollbarHeight = 0f
+  private var verticalScrollbarVisible = false
+  private var verticalScrollbarValidUpdates = 0
+  private var verticalScrollbarUpdateScheduled = false
+  private val verticalScrollbarHideRunnable = Runnable {
+    if (!showVerticalScrollbar) return@Runnable
+
+    val viewportHeight = height.toFloat()
+    val contentHeight = layout?.height?.toFloat() ?: 0f
+    val visibleLineCount = (layout?.lineCount ?: 0) - if (text?.endsWith("\n") == true) 1 else 0
+    if (visibleLineCount < 5 ||
+        viewportHeight <= 0 ||
+        contentHeight - viewportHeight <= 0) {
+      verticalScrollbarVisible = false
+      invalidate()
+    }
+  }
 
   constructor(context: Context) : super(context) {
     prepareComponent()
@@ -185,25 +208,21 @@ class EnrichedTextInputView :
     super.scrollTo(0, y)
   }
 
+  override fun setVerticalScrollBarEnabled(enabled: Boolean) {
+    super.setVerticalScrollBarEnabled(false)
+  }
+
   override fun onDraw(canvas: Canvas) {
     super.onDraw(canvas)
 
-    if (!showVerticalScrollbar) return
-
-    val viewportHeight = height.toFloat()
-    val contentHeight = computeVerticalScrollRange().toFloat()
-    val scrollableHeight = contentHeight - viewportHeight
-    if (viewportHeight <= 0 || scrollableHeight <= 0) return
-
     val density = resources.displayMetrics.density
-    val indicatorHeight = maxOf(18 * density, viewportHeight * viewportHeight / contentHeight)
-    val progress = (computeVerticalScrollOffset() / scrollableHeight).coerceIn(0f, 1f)
-    val top = scrollY + progress * (viewportHeight - indicatorHeight)
+    if (!showVerticalScrollbar || !verticalScrollbarVisible) return
+
     canvas.drawRoundRect(
       width - 10 * density,
-      top,
+      verticalScrollbarTop,
       width - 4 * density,
-      top + indicatorHeight,
+      verticalScrollbarTop + verticalScrollbarHeight,
       3 * density,
       3 * density,
       verticalScrollbarPaint,
@@ -217,7 +236,70 @@ class EnrichedTextInputView :
     oldt: Int,
   ) {
     super.onScrollChanged(l, t, oldl, oldt)
-    if (showVerticalScrollbar) invalidate()
+    scheduleVerticalScrollbarUpdate()
+  }
+
+  override fun onSizeChanged(
+    width: Int,
+    height: Int,
+    oldWidth: Int,
+    oldHeight: Int,
+  ) {
+    super.onSizeChanged(width, height, oldWidth, oldHeight)
+    scheduleVerticalScrollbarUpdate()
+  }
+
+  override fun onTextChanged(
+    text: CharSequence?,
+    start: Int,
+    before: Int,
+    count: Int,
+  ) {
+    super.onTextChanged(text, start, before, count)
+    scheduleVerticalScrollbarUpdate()
+  }
+
+  private fun scheduleVerticalScrollbarUpdate() {
+    if (!showVerticalScrollbar || verticalScrollbarUpdateScheduled) return
+
+    verticalScrollbarUpdateScheduled = true
+    post {
+      verticalScrollbarUpdateScheduled = false
+      updateVerticalScrollbar()
+    }
+  }
+
+  private fun updateVerticalScrollbar() {
+    if (!showVerticalScrollbar) return
+
+    val viewportHeight = height.toFloat()
+    val contentHeight = layout?.height?.toFloat() ?: 0f
+    val scrollableHeight = contentHeight - viewportHeight
+    val visibleLineCount = (layout?.lineCount ?: 0) - if (text?.endsWith("\n") == true) 1 else 0
+    if (visibleLineCount < 5 || viewportHeight <= 0 || scrollableHeight <= 0) {
+      verticalScrollbarValidUpdates = 0
+      if (verticalScrollbarVisible) {
+        removeCallbacks(verticalScrollbarHideRunnable)
+        postDelayed(verticalScrollbarHideRunnable, 120)
+      }
+      return
+    }
+
+    removeCallbacks(verticalScrollbarHideRunnable)
+    if (!verticalScrollbarVisible) {
+      verticalScrollbarValidUpdates += 1
+      if (verticalScrollbarValidUpdates < 2) {
+        post { scheduleVerticalScrollbarUpdate() }
+        return
+      }
+    }
+    val density = resources.displayMetrics.density
+    val indicatorHeight = maxOf(18 * density, viewportHeight * viewportHeight / contentHeight)
+    val progress = (computeVerticalScrollOffset() / scrollableHeight).coerceIn(0f, 1f)
+    verticalScrollbarHeight = indicatorHeight
+    verticalScrollbarTop = scrollY + progress * (viewportHeight - indicatorHeight)
+    verticalScrollbarVisible = true
+    invalidate()
   }
 
   override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? {
@@ -259,7 +341,7 @@ class EnrichedTextInputView :
   private fun prepareComponent() {
     isSingleLine = false
     isHorizontalScrollBarEnabled = false
-    isVerticalScrollBarEnabled = true
+    isVerticalScrollBarEnabled = false
     gravity = Gravity.TOP or Gravity.START
     inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
 

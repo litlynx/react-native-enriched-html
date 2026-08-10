@@ -9,9 +9,19 @@
 
 @interface EnrichedInputTextView ()
 @property(nonatomic, strong) UIView *customVerticalScrollIndicator;
+@property(nonatomic) BOOL customVerticalScrollIndicatorUpdateScheduled;
+@property(nonatomic) NSUInteger customVerticalScrollIndicatorHideGeneration;
+@property(nonatomic) NSUInteger customVerticalScrollIndicatorValidUpdates;
 @end
 
 @implementation EnrichedInputTextView
+
+- (void)setShowsVerticalScrollIndicator:(BOOL)show {
+  [super setShowsVerticalScrollIndicator:NO];
+}
+
+- (void)flashScrollIndicators {
+}
 
 - (void)setShowsCustomVerticalScrollIndicator:(BOOL)show {
   _showsCustomVerticalScrollIndicator = show;
@@ -26,6 +36,7 @@
                         alpha:1];
     _customVerticalScrollIndicator.layer.cornerRadius = 6;
     _customVerticalScrollIndicator.userInteractionEnabled = NO;
+    _customVerticalScrollIndicator.hidden = YES;
     EnrichedTextInputView *input = (EnrichedTextInputView *)_input;
     [input addSubview:_customVerticalScrollIndicator];
   }
@@ -35,17 +46,46 @@
     _customVerticalScrollIndicator = nil;
   }
 
-  [self updateCustomVerticalScrollIndicator];
+  [self scheduleCustomVerticalScrollIndicatorUpdate];
 }
 
 - (void)setContentOffset:(CGPoint)contentOffset {
   [super setContentOffset:contentOffset];
-  [self updateCustomVerticalScrollIndicator];
+  [self scheduleCustomVerticalScrollIndicatorUpdate];
 }
 
 - (void)setContentSize:(CGSize)contentSize {
   [super setContentSize:contentSize];
-  [self updateCustomVerticalScrollIndicator];
+  [self scheduleCustomVerticalScrollIndicatorUpdate];
+}
+
+- (void)scheduleCustomVerticalScrollIndicatorUpdate {
+  if (_customVerticalScrollIndicatorUpdateScheduled) {
+    return;
+  }
+
+  _customVerticalScrollIndicatorUpdateScheduled = YES;
+  dispatch_async(dispatch_get_main_queue(), ^{
+    self->_customVerticalScrollIndicatorUpdateScheduled = NO;
+    [self updateCustomVerticalScrollIndicator];
+  });
+}
+
+- (NSUInteger)renderedLineCount {
+  NSRange glyphRange =
+      [self.layoutManager glyphRangeForTextContainer:self.textContainer];
+  __block NSUInteger lineCount = 0;
+  [self.layoutManager
+      enumerateLineFragmentsForGlyphRange:glyphRange
+                               usingBlock:^(CGRect rect, CGRect usedRect,
+                                            NSTextContainer *container,
+                                            NSRange glyphRange, BOOL *stop) {
+                                 lineCount += 1;
+                               }];
+  if ([self.textStorage.string hasSuffix:@"\n"] && lineCount > 0) {
+    lineCount -= 1;
+  }
+  return lineCount;
 }
 
 - (void)updateCustomVerticalScrollIndicator {
@@ -54,14 +94,52 @@
   }
 
   CGFloat viewportHeight = CGRectGetHeight(self.bounds);
-  CGFloat contentHeight = self.contentSize.height;
+  [self.layoutManager ensureLayoutForTextContainer:self.textContainer];
+  CGFloat contentHeight = CGRectGetHeight([self.layoutManager
+                              usedRectForTextContainer:self.textContainer]) +
+                          self.textContainerInset.top +
+                          self.textContainerInset.bottom;
   CGFloat scrollableHeight = contentHeight - viewportHeight;
-  BOOL canScroll = viewportHeight > 0 && scrollableHeight > 0;
-  _customVerticalScrollIndicator.hidden = !canScroll;
+  BOOL canScroll = [self renderedLineCount] >= 5 && viewportHeight > 0 &&
+                   scrollableHeight > 0;
   if (!canScroll) {
+    _customVerticalScrollIndicatorValidUpdates = 0;
+    if (!_customVerticalScrollIndicator.hidden) {
+      NSUInteger generation = ++_customVerticalScrollIndicatorHideGeneration;
+      dispatch_after(
+          dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.12 * NSEC_PER_SEC)),
+          dispatch_get_main_queue(), ^{
+            if (generation !=
+                    self->_customVerticalScrollIndicatorHideGeneration ||
+                !self->_showsCustomVerticalScrollIndicator) {
+              return;
+            }
+
+            CGFloat currentViewportHeight = CGRectGetHeight(self.bounds);
+            [self.layoutManager
+                ensureLayoutForTextContainer:self.textContainer];
+            CGFloat currentContentHeight =
+                CGRectGetHeight([self.layoutManager
+                    usedRectForTextContainer:self.textContainer]) +
+                self.textContainerInset.top + self.textContainerInset.bottom;
+            if ([self renderedLineCount] < 5 || currentViewportHeight <= 0 ||
+                currentContentHeight - currentViewportHeight <= 0) {
+              self->_customVerticalScrollIndicator.hidden = YES;
+            }
+          });
+    }
     return;
   }
 
+  _customVerticalScrollIndicatorHideGeneration += 1;
+  if (_customVerticalScrollIndicator.hidden) {
+    _customVerticalScrollIndicatorValidUpdates += 1;
+    if (_customVerticalScrollIndicatorValidUpdates < 2) {
+      [self scheduleCustomVerticalScrollIndicatorUpdate];
+      return;
+    }
+  }
+  _customVerticalScrollIndicator.hidden = NO;
   CGFloat indicatorHeight =
       MAX(18, viewportHeight * viewportHeight / contentHeight);
   CGFloat progress = MIN(MAX(self.contentOffset.y / scrollableHeight, 0), 1);
@@ -74,7 +152,7 @@
 
 - (void)layoutSubviews {
   [super layoutSubviews];
-  [self updateCustomVerticalScrollIndicator];
+  [self scheduleCustomVerticalScrollIndicatorUpdate];
   // UITextView resets contentSize during its own layout pass (triggered when
   // the frame is set on first mount). Re-schedule a relayout so our explicit
   // contentSize is applied after UITextView finishes its internal layout.
